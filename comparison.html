@@ -1,0 +1,73 @@
+<div id="journal-comparison">
+  <h2>Adderall, together or separate</h2>
+  <div class="viz-controls">
+    <label class="form-label">Group by<select class="form-select" id="jc-group"><option value="combined">Adderall combined</option><option value="separate">XR and IR separately</option></select></label>
+    <label class="form-label">Monthly measure<select class="form-select" id="jc-measure"><option value="count">Logged doses</option><option value="mg">Recorded mg</option></select></label>
+  </div>
+  <div class="viz-grid" id="jc-stats" aria-live="polite"></div>
+  <h3>Monthly history</h3>
+  <div id="jc-months"></div>
+  <div class="viz-row" id="jc-legend"></div>
+  <h3>Recent dose timing · America/New_York</h3>
+  <div id="jc-timing"></div>
+  <div class="text-small text-muted">Dose markers only · XR circles / IR diamonds · Owner entries only · Coverage depends on the supplied export</div>
+</div>
+<style>
+#journal-comparison .jc-plot{width:100%;display:block;overflow:visible}
+#journal-comparison .jc-plot text{fill:var(--foreground)}
+#journal-comparison .jc-grid{stroke:var(--border);stroke-width:1}
+#journal-comparison .jc-xr{fill:var(--viz-series-1)}
+#journal-comparison .jc-ir{fill:var(--viz-series-2)}
+#journal-comparison .jc-total{fill:var(--viz-series-1)}
+</style>
+<script>
+(()=>{
+const data=__JOURNAL_DATA__;
+const root=document.getElementById('journal-comparison');
+const group=root.querySelector('#jc-group'), measure=root.querySelector('#jc-measure');
+const fmt=x=>Number(x.toFixed(1)).toLocaleString();
+const ns='http://www.w3.org/2000/svg';
+function el(name,attrs={},text){const e=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
+function plot(container,height,label){container.replaceChildren();const w=Math.max(280,container.clientWidth);const s=el('svg',{width:w,height,role:'img','aria-label':label,class:'jc-plot'});s.append(el('title',{},label));container.append(s);return [s,w];}
+function text(s,x,y,t,anchor='start'){s.append(el('text',{x,y,'text-anchor':anchor,class:'text-small'},t));}
+function render(){
+ const combined=group.value==='combined',count=measure.value==='count';
+ const st=root.querySelector('#jc-stats');st.replaceChildren();
+ for(const [label,value] of [['Logged doses',data.adderallEvents],['Days logged',data.adderallDays],['Days with both',data.bothDays]]){
+  const card=document.createElement('div');card.className='card viz-stat';
+  const l=document.createElement('div');l.textContent=label;
+  const v=document.createElement('div');v.className='viz-stat-value tabular-nums';v.textContent=value;
+  card.append(l,v);st.append(card);
+ }
+ const months=data.monthly;
+ const [s,w]=plot(root.querySelector('#jc-months'),months.length*32+42,'Monthly Adderall '+(count?'logged doses':'recorded milligrams')+', '+group.options[group.selectedIndex].text);
+ const left=76,right=76,width=w-left-right;
+ const val=(m,f)=>m[f+(count?'_count':'')];
+ const max=Math.max(1,...months.map(m=>val(m,'XR')+val(m,'IR')));
+ months.forEach((m,n)=>{
+  const y=n*32+8,a=val(m,'XR'),b=val(m,'IR');text(s,0,y+13,m.month);
+  if(combined){s.append(el('rect',{x:left,y,width:width*(a+b)/max,height:18,class:'jc-total','data-tooltip':`${m.month}: ${fmt(a+b)} ${count?'doses':'mg'}`}));}
+  else{ s.append(el('rect',{x:left,y,width:width*a/max,height:18,class:'jc-xr','data-tooltip':`${m.month} XR: ${fmt(a)} ${count?'doses':'mg'}`}));s.append(el('rect',{x:left+width*a/max,y,width:width*b/max,height:18,class:'jc-ir','data-tooltip':`${m.month} IR: ${fmt(b)} ${count?'doses':'mg'}`}));}
+  text(s,left+width*(a+b)/max+7,y+13,fmt(a+b));
+ });
+ text(s,left,months.length*32+26,`0–${fmt(max)} ${count?'logged doses':'recorded mg'} / month`);
+ root.querySelector('#jc-legend').textContent=combined?'Combined Adderall': 'Stack order: XR first · IR second';
+ const days=data.recentDays;
+ const [t,tw]=plot(root.querySelector('#jc-timing'),days.length*(combined?34:52)+36,'Recent recorded Adderall dose times. Circles are XR; diamonds are IR.');
+ const lx=88,rw=tw-lx-16,h=days.length*(combined?34:52);
+ for(const hr of [0,6,12,18,24]){const x=lx+rw*hr/24;t.append(el('line',{x1:x,x2:x,y1:0,y2:h,class:'jc-grid'}));text(t,x,h+22,String(hr).padStart(2,'0'),hr===24?'end':'middle');}
+ days.forEach((d,n)=>{
+  const y=n*(combined?34:52)+14;text(t,0,y+4,d.date.slice(5));
+  for(const e of d.events){const x=lx+rw*e.hour/24,cy=y+(!combined&&e.form==='IR'?19:0);
+   const attrs={class:e.form==='XR'?'jc-xr':'jc-ir','data-tooltip':`${d.date} ${String(Math.floor(e.hour)).padStart(2,'0')}:${String(Math.round(e.hour%1*60)).padStart(2,'0')} · ${e.form} · ${fmt(e.mg)} mg · ${e.route}`};
+   t.append(e.form==='XR'?el('circle',{cx:x,cy,r:5,...attrs}):el('polygon',{points:`${x},${cy-6} ${x+6},${cy} ${x},${cy+6} ${x-6},${cy}`,...attrs}));
+  }
+ });
+}
+function restore(state){if(state?.privateContent){group.value=state.privateContent.group==='separate'?'separate':'combined';measure.value=state.privateContent.measure==='mg'?'mg':'count';}render();}
+for(const e of [group,measure])e.addEventListener('change',()=>{render();window.openai?.setWidgetState?.({modelContent:{group:group.value,measure:measure.value},privateContent:{group:group.value,measure:measure.value}})?.catch(()=>{});});
+restore(window.openai?.widgetState);
+window.addEventListener('openai:set_globals',e=>{if(e.detail?.globals?.widgetState)restore(e.detail.globals.widgetState);});
+new ResizeObserver(render).observe(root);
+})();
+</script>
