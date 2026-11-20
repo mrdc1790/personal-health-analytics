@@ -2,13 +2,20 @@
 
 ## Delivery boundary
 
-The first delivery is documentation, sanitization, and public GitHub publication. No full pipeline, live connector, dashboard, Android app, or account-data import is implemented here. Existing prototype files are retained as legacy examples. The [broader experience-app vision](PERSONAL_EXPERIENCE_VISION.md) is a later extension, not a dependency of health ingestion.
+Milestone 0 is complete. The repository publishes the initial plan, proposed
+data model, and schema-only source audit. The legacy journal analysis
+prototype can read a local export and write a summary. The next milestone is
+source inspection, starting with the remaining Samsung Health, Strava, and
+HabitShare evidence described in the [source audit](SOURCE_AUDIT.md).
+The normalized ingestion pipeline and dashboard remain planned. The
+[broader experience-app vision](PERSONAL_EXPERIENCE_VISION.md) builds on that
+future pipeline.
 
 ## Milestones and acceptance
 
 | Milestone | Deliverable | Acceptance / dependency |
 | --- | --- | --- |
-| 0. Publish planning repository | README, source audit, proposed model, this roadmap, broader vision; local private audit | Public files contain schema-only source evidence; explicit staged allowlist reviewed; private data excluded; GitHub remote contents verified |
+| 0. Publish planning repository (complete) | README, source audit, proposed model, this roadmap, broader vision; local private audit | Public files contain schema-only source evidence; explicit staged allowlist reviewed; private data excluded; GitHub remote contents verified |
 | 1. Complete source inspection | Detailed local inventories and sanitized mappings for journal, Samsung, Strava, HabitShare | Representative files inspected; units, timezones, IDs and observed metrics documented; two overlapping snapshots and edited records available; no invented schemas |
 | 2. Database and configuration | Versioned SQLite migrations, provenance and identity model, local mapping/config validation | Synthetic schema/relationship tests; explicit reconciliation rules validated against milestone 1; backup/restore procedure documented |
 | 3. Immutable ingestion | Python adapters, validation/quarantine, import manifests, initial CLI | Reimport leaves canonical counts unchanged; overlapping exports preserve legitimate multiplicity; edits/retries/unknown IDs are traceable; raw bytes remain unchanged |
