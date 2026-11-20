@@ -53,5 +53,7 @@ if __name__ == '__main__':
     p.add_argument('--output', default='private/summary.json')
     args=p.parse_args()
     result=analyze(json.loads(Path(args.input).read_text(encoding='utf-8-sig')))
-    Path(args.output).write_text(json.dumps(result,indent=2),encoding='utf-8')
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(json.dumps({k:v for k,v in result.items() if k not in ('monthly','recentDays','topProducts')},indent=2))

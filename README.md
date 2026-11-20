@@ -43,8 +43,7 @@ Missing records do not mean zero activity or abstinence. Analyses describe assoc
 Requires Python 3.10+ and IANA timezone data (`tzdata` on Windows):
 
 ```powershell
-python -m pip install tzdata
-New-Item -ItemType Directory -Force private
+python -m pip install -r requirements.txt
 python analyze.py path/to/export.json --output private/summary.json
 python -m unittest test_analysis
 ```
