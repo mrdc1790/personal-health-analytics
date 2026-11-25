@@ -1,6 +1,8 @@
 # Personal Health Analytics
 
-A Windows-first, local-first project for exploring associations between PsychonautWiki Journal records, Samsung Health wellness data, Strava activities, and HabitShare habits. The longer-term vision is a personal experience app connecting health, books, films, games, live music, and planning.
+A local-first analytics design for combining journal, activity, wellness, and habit exports. The repository contains a Python journal-analysis prototype with tests and a proposed SQLite pipeline for future imports.
+
+The design keeps raw source records and provenance so derived metrics can be traced back to the original exports. [Working prototype](analyze.py) · [Proposed data model](docs/PROPOSED_DATA_MODEL.md) · [Prototype tests](test_analysis.py)
 
 ## Current status
 
